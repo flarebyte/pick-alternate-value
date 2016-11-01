@@ -2,23 +2,25 @@ import _ from "lodash"
 
 
 const pickLongestSize = (list) => {
-  if (_.isEmpty(list)) return null;
-  const sorted = _.sortBy(list, s => _.size(s))
+  const noNullList = _.filter(list , s => !_.isNil(s))
+  if (_.isEmpty(noNullList)) return null;
+  const sorted = _.sortBy(noNullList, s => _.size(s))
   const maxSize = _.size(_.last(sorted))
-  const filtered = _.filter(list, s => _.size(s) ===  maxSize)
+  const filtered = _.filter(noNullList, s => _.size(s) ===  maxSize)
   return _.head(filtered)
 }
 
 const pickShortestSize = (list) => {
-  if (_.isEmpty(list)) return null;
-  const sorted = _.sortBy(list, s => _.size(s))
+  const noNullList = _.filter(list , s => !_.isNil(s))
+  if (_.isEmpty(noNullList)) return null;
+  const sorted = _.sortBy(noNullList, s => _.size(s))
   const minSize = _.size(_.head(sorted))
-  const filtered = _.filter(list, s => _.size(s) ===  minSize)
+  const filtered = _.filter(noNullList, s => _.size(s) ===  minSize)
   return _.head(filtered)
 }
 
-const sumSize = () => {
-
+const sumSize = (list) => {
+  return _.sumBy(list, s => _.size(s))
 }
 
 const minLengthOfStringTemplate = () => {
