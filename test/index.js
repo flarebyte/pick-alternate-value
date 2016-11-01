@@ -6,10 +6,11 @@ test('pick the longest size', (t) => {
   const a = 'A'
   const b = 'B'
   const c = 'C'
-  t.plan(8)
+  t.plan(9)
   t.equal(pav.pickLongestSize(null), null, 'null')
   t.equal(pav.pickLongestSize([]), null, 'empty')
   t.equal(pav.pickLongestSize([null, '']), '', 'discard null')
+  t.equal(pav.pickLongestSize(['ab','a','abcd'], 2),'with max', 'A')
   t.equal(pav.pickLongestSize(['ab','a','abcd']),'abcd', 'A')
   t.equal(pav.pickLongestSize(['abcde','a','ab']),'abcde', 'B')
   t.equal(pav.pickLongestSize(['ab','ab1','ab2','a']),'ab1', 'take 1st of 2 eq')
@@ -70,4 +71,10 @@ test('min the size', (t) => {
   t.equal(pav.minSize(['ab','a',null]),1, 'with null')
   t.deepEqual(pav.minSize([[1,2],[1,2,3],[1]]),1, 'arr of array')
   t.deepEqual(pav.minSize([{a,b},{a,b,c},{a}]),1, 'array of obj')
+})
+
+test('minimum length of template', (t) => {
+  t.plan(2)
+  t.equal(pav.minLengthOfTemplate(null), null, 'with null')
+  t.equal(pav.minLengthOfTemplate('12345${ user }6${a.b.c}7'), 7, 'templ size')
 })

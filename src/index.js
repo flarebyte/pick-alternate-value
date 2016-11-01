@@ -37,8 +37,10 @@ const maxSize = (list) => {
   return _.size(_.last(sorted))
 }
 
-const minLengthOfStringTemplate = () => {
-
+const minLengthOfTemplate = (template) => {
+  if (_.isNil(template)) return null;
+  const withoutVars = template.replace(/\$\{\s*[A-Za-z0-9.]+\s*\}/g,'')
+  return _.size(withoutVars);
 }
 
 const calculateAltSizeTable = () => {
@@ -51,7 +53,7 @@ const pickAlternateValue = {
   sumSize,
   minSize,
   maxSize,
-  minLengthOfStringTemplate,
+  minLengthOfTemplate,
   calculateAltSizeTable
 }
 
