@@ -45,3 +45,29 @@ test('sum the size', (t) => {
   t.deepEqual(pav.sumSize([[1,2],[1,2,3],[1]]),6, 'arr of array')
   t.deepEqual(pav.sumSize([{a,b},{a,b,c},{a}]),6, 'array of obj')
 })
+
+test('max the size', (t) => {
+  const a = 'A'
+  const b = 'B'
+  const c = 'C'
+  t.plan(6)
+  t.equal(pav.maxSize(null), null, 'zero')
+  t.equal(pav.maxSize([]), null, 'empty')
+  t.equal(pav.maxSize(['ab','a','abcd']),4, 'A')
+  t.equal(pav.maxSize(['ab','a',null]),2, 'with null')
+  t.deepEqual(pav.maxSize([[1,2],[1,2,3],[1]]),3, 'arr of array')
+  t.deepEqual(pav.maxSize([{a,b},{a,b,c},{a}]),3, 'array of obj')
+})
+
+test('min the size', (t) => {
+  const a = 'A'
+  const b = 'B'
+  const c = 'C'
+  t.plan(6)
+  t.equal(pav.minSize(null), null, 'zero')
+  t.equal(pav.minSize([]), null, 'empty')
+  t.equal(pav.minSize(['ab','a','abcd']),1, 'A')
+  t.equal(pav.minSize(['ab','a',null]),1, 'with null')
+  t.deepEqual(pav.minSize([[1,2],[1,2,3],[1]]),1, 'arr of array')
+  t.deepEqual(pav.minSize([{a,b},{a,b,c},{a}]),1, 'array of obj')
+})
