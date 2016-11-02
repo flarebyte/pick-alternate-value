@@ -2,8 +2,8 @@ import _ from "lodash"
 
 
 const pickLongestSize = (list,
-   max = Number.MAX_SAFE_INTEGER,
-   defaultValue = null) => {
+   defaultValue = null,
+   max = Number.MAX_SAFE_INTEGER) => {
   const noNullList = _.filter(list , s => !_.isNil(s) && _.size(s) <= max )
   if (_.isEmpty(noNullList)) return defaultValue;
   const sorted = _.sortBy(noNullList, s => _.size(s))
@@ -13,8 +13,9 @@ const pickLongestSize = (list,
 }
 
 const pickShortestSize = (list,
-  min = -1,
-  defaultValue = null) => {
+  defaultValue = null,
+  min = -1
+  ) => {
   const noNullList = _.filter(list , s => !_.isNil(s) && _.size(s) >= min)
   if (_.isEmpty(noNullList)) return defaultValue;
   const sorted = _.sortBy(noNullList, s => _.size(s))
