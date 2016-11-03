@@ -48,7 +48,55 @@ const minLengthOfTemplate = (template) => {
   return _.size(withoutVars);
 }
 
-const calculateAltSizeTable = () => {
+const getArrInArr = (arrIdx, listOfList) => {
+  if (_.isNil(arrIdx) || _.isNil(listOfList) ) return null;
+  const sizeIdx = _.size(arrIdx);
+  const sizeList = _.size(listOfList)
+  if (sizeIdx !== sizeList) {
+    throw new Error(`size idx ${sizeIdx} different of ${sizeList}`)
+  }
+  var result = [];
+  for (var i=0; i< sizeIdx; i++) {
+    const value = listOfList[i][arrIdx[i]];
+    if (_.isUndefined(value)) {
+      return null;
+    }
+    result.push(value);
+  }
+  return result;
+}
+
+const decArrayIndex = (arrIdx, maxIdx) => {
+  if (sumSize(arrIdx) === 0) return null;
+  const size = _.size(arrIdx);
+  result = [];
+  const headDec = arrIdx[0]--;
+  if (headDec === -1) {
+    _.tail(arrIdx);
+    //dec colum suivante
+  } else {
+    return _.tail(arrIdx).unshift(headDec);
+  }
+
+}
+
+const calculateAltSizeTable = (listOfList) => {
+  if (_.isEmpty(listOfList)) return null;
+  const maxIdx = _.map(listOfList, n => _.size(listOfList)-1);
+  var idx = maxIdx;
+  const size = _.size(listOfList);
+  const idxZero = _.fill(Array(size), 0);
+  var result = [];
+
+  //todo neg boolean
+  while (_.isEqual(idx, idxZero)) {
+    const list = getArrInArr(idx, listOfList);
+    const sumOfList = sumSize(list);
+    result.push([sumOfList, 0, list]);
+    idx = decArrayIndex(idx, maxIdx);
+  }
+
+  return result;
 
 }
 
@@ -59,6 +107,8 @@ const pickAlternateValue = {
   minSize,
   maxSize,
   minLengthOfTemplate,
+  getArrInArr,
+  decArrayIndex,
   calculateAltSizeTable
 }
 
