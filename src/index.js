@@ -72,7 +72,9 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   result = [];
   const headDec = arrIdx[0]--;
   if (headDec === -1) {
-    _.tail(arrIdx);
+    const tailIdx = _.tail(arrIdx);
+    const tailMaxIdx = _.tail(maxIdx);
+    const tailRes = decArrayIndex(tailIdx, tailMaxIdx);
     //dec colum suivante
   } else {
     return _.tail(arrIdx).unshift(headDec);
