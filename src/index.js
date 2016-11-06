@@ -89,15 +89,13 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   return tailIdx;
 };
 
-const flattenListOfList = (listOfList) => {
+const combineListOfList = (listOfList) => {
   if (_.isEmpty(listOfList)) return null;
   const maxIdx = _.map(listOfList, n => _.size(n) - 1);
   let idx = maxIdx;
-  const size = _.size(listOfList);
-  const idxZero = _.fill(Array(size), 0);
   const result = [];
 
-  while (!_.isEqual(idx, idxZero)) {
+  while (idx[0] !== -1) {
     const list = getArrInArr(idx, listOfList);
     result.push(list);
     idx = decArrayIndex(idx, maxIdx);
@@ -116,7 +114,7 @@ const pickAlternateValue = {
   discardPlaceholders,
   getArrInArr,
   decArrayIndex,
-  flattenListOfList,
+  combineListOfList,
 };
 
 module.exports = pickAlternateValue;

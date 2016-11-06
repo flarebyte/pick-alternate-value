@@ -6,8 +6,8 @@ const a = 'A';
 const b = 'B';
 const c = 'C';
 const a31 = ['aaa', 'a'];
-const a123 = ['a', 'aa', 'aaa'];
-const a2135 = ['aa', 'a', 'aaa', 'aaaaa'];
+const a123 = ['b', 'bb', 'bbb'];
+const a2135 = ['cc', 'c', 'ccc', 'ccccc'];
 
 
 test('pick the longest size', (t) => {
@@ -104,11 +104,21 @@ test('decrement an index of array starting from head', (t) => {
 });
 
 
-test('calculate the alternative size table', (t) => {
+test('combine a list of list', (t) => {
+  let i;
+  let j;
+  let k;
   t.plan(2);
-  const expected = [
-  ];
-  const actual = pav.flattenListOfList([a31, a123, a2135]);
+  const expected = [];
+
+  for (i of a2135) {
+    for (j of a123) {
+      for (k of a31) {
+        expected.push([k, j, i]);
+      }
+    }
+  }
+  const actual = pav.combineListOfList([a31, a123, a2135]);
   t.equal(actual.length, 2 * 3 * 4, 'size');
-  t.deepEqual(actual, expected, 'Table');
+  t.deepEqual(actual, expected.reverse(), 'Table');
 });
