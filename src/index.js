@@ -77,14 +77,14 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   if (_.size(arrIdxl) === 1) {
     return [headDec];
   }
-  if (headDec < 0) {
-    const tailIdx = _.tail(arrIdxl);
-    const tailMaxIdx = _.tail(maxIdxl);
+  const tailIdx = _.tail(arrIdxl);
+  const tailMaxIdx = _.tail(maxIdxl);
+  const isAllZerosOnRight = _.every(tailIdx, n => n === 0);
+  if (headDec < 0 && !isAllZerosOnRight) {
     const tailRes = decArrayIndex(tailIdx, tailMaxIdx);
     tailRes.unshift(maxIdxl[0]);
     return tailRes;
   }
-  const tailIdx = _.tail(arrIdxl);
   tailIdx.unshift(headDec);
   return tailIdx;
 };

@@ -88,7 +88,7 @@ test('get an array inside an array', (t) => {
 });
 
 test('decrement an index of array starting from head', (t) => {
-  t.plan(10);
+  t.plan(12);
   t.deepEqual(pav.decArrayIndex([3, 2], [3, 2]), [2, 2], 'A');
   t.deepEqual(pav.decArrayIndex([0, 2], [3, 2]), [3, 1], 'B');
   t.deepEqual(pav.decArrayIndex([0, 1], [3, 2]), [3, 0], 'C');
@@ -99,6 +99,8 @@ test('decrement an index of array starting from head', (t) => {
   t.deepEqual(pav.decArrayIndex([0, 0, 4], [3, 2, 4]), [3, 2, 3], 'H');
   t.deepEqual(pav.decArrayIndex([1, 0, 0], [3, 2, 4]), [0, 0, 0], 'I');
   t.deepEqual(pav.decArrayIndex([0, 0, 0], [3, 2, 4]), [-1, 0, 0], 'J');
+  t.deepEqual(pav.decArrayIndex([0, 0, 0, 0], [3, 2, 4, 5]), [-1, 0, 0, 0], 'K');
+  t.deepEqual(pav.decArrayIndex([0, 1, 0, 0], [3, 2, 4, 5]), [3, 0, 0, 0], 'L');
 });
 
 
