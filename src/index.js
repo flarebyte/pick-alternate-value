@@ -79,7 +79,7 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   }
   if (headDec < 0) {
     const tailIdx = _.tail(arrIdxl);
-    const tailMaxIdx = _.tail(arrIdxl);
+    const tailMaxIdx = _.tail(maxIdxl);
     const tailRes = decArrayIndex(tailIdx, tailMaxIdx);
     tailRes.unshift(maxIdxl[0]);
     return tailRes;
@@ -89,7 +89,7 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   return tailIdx;
 };
 
-const calculateAltSizeTable = (listOfList) => {
+const flattenListOfList = (listOfList) => {
   if (_.isEmpty(listOfList)) return null;
   const maxIdx = _.map(listOfList, n => _.size(n) - 1);
   let idx = maxIdx;
@@ -97,16 +97,15 @@ const calculateAltSizeTable = (listOfList) => {
   const idxZero = _.fill(Array(size), 0);
   const result = [];
 
-  // todo neg boolean
-  while (_.isEqual(idx, idxZero)) {
+  while (!_.isEqual(idx, idxZero)) {
     const list = getArrInArr(idx, listOfList);
-    const sumOfList = sumSize(list);
-    result.push([sumOfList, 0, list]);
+    result.push(list);
     idx = decArrayIndex(idx, maxIdx);
   }
 
   return result;
 };
+
 
 const pickAlternateValue = {
   pickLongestSize,
@@ -117,7 +116,7 @@ const pickAlternateValue = {
   discardPlaceholders,
   getArrInArr,
   decArrayIndex,
-  calculateAltSizeTable,
+  flattenListOfList,
 };
 
 module.exports = pickAlternateValue;

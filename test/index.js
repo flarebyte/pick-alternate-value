@@ -88,43 +88,25 @@ test('get an array inside an array', (t) => {
 });
 
 test('decrement an index of array starting from head', (t) => {
-  t.plan(5);
-  pav.decArrayIndex([3, 2], [3, 2]);
+  t.plan(10);
   t.deepEqual(pav.decArrayIndex([3, 2], [3, 2]), [2, 2], 'A');
   t.deepEqual(pav.decArrayIndex([0, 2], [3, 2]), [3, 1], 'B');
   t.deepEqual(pav.decArrayIndex([0, 1], [3, 2]), [3, 0], 'C');
   t.deepEqual(pav.decArrayIndex([1, 0], [3, 2]), [0, 0], 'D');
-  t.deepEqual(pav.decArrayIndex([0, 0], [3, 2]), [3, -1], 'E');
+  t.deepEqual(pav.decArrayIndex([0, 0], [3, 2]), [-1, 0], 'E');
+  t.deepEqual(pav.decArrayIndex([2, 2, 4], [3, 2, 4]), [1, 2, 4], 'F');
+  t.deepEqual(pav.decArrayIndex([0, 2, 4], [3, 2, 4]), [3, 1, 4], 'G');
+  t.deepEqual(pav.decArrayIndex([0, 0, 4], [3, 2, 4]), [3, 2, 3], 'H');
+  t.deepEqual(pav.decArrayIndex([1, 0, 0], [3, 2, 4]), [0, 0, 0], 'I');
+  t.deepEqual(pav.decArrayIndex([0, 0, 0], [3, 2, 4]), [-1, 0, 0], 'J');
 });
 
 
 test('calculate the alternative size table', (t) => {
-  t.plan(1);
+  t.plan(2);
   const expected = [
-    [3 + 1 + 2, 0, [0, 0, 0]],
-    [3 + 1 + 1], 0, [0, 0, 1],
-    [3 + 1 + 3], 0, [0, 0, 2],
-    [3 + 1 + 5], 0, [0, 0, 3],
-    [3 + 2 + 2, 0, [0, 1, 0]],
-    [3 + 2 + 1], 0, [0, 1, 1],
-    [3 + 2 + 3], 0, [0, 1, 2],
-    [3 + 2 + 5], 0, [0, 1, 3],
-    [3 + 3 + 2], 0, [0, 2, 0],
-    [3 + 3 + 1], 0, [0, 2, 1],
-    [3 + 3 + 3], 0, [0, 2, 2],
-    [3 + 3 + 5], 0, [0, 2, 3],
-    [1 + 1 + 2, 0, [1, 0, 0]],
-    [1 + 1 + 1], 0, [1, 0, 1],
-    [1 + 1 + 3], 0, [1, 0, 2],
-    [1 + 1 + 5], 0, [1, 0, 3],
-    [1 + 2 + 2, 0, [1, 1, 0]],
-    [1 + 2 + 1], 0, [1, 1, 1],
-    [1 + 2 + 3], 0, [1, 1, 2],
-    [1 + 2 + 5], 0, [1, 1, 3],
-    [1 + 3 + 2], 0, [1, 2, 0],
-    [1 + 3 + 1], 0, [1, 2, 1],
-    [1 + 3 + 3], 0, [1, 2, 2],
-    [1 + 3 + 5], 0, [1, 2, 3],
   ];
-  t.deepEqual(pav.calculateAltSizeTable([a31, a123, a2135]), expected, 'Table');
+  const actual = pav.flattenListOfList([a31, a123, a2135]);
+  t.equal(actual.length, 2 * 3 * 4, 'size');
+  t.deepEqual(actual, expected, 'Table');
 });
