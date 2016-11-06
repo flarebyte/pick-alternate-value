@@ -186,6 +186,10 @@ const combineListOfList = (listOfList) => {
   return result;
 };
 
+const orderListCombinationByRankDesc = (listCombination, rankFn) => {
+  return listCombination;
+};
+
 
 const pickAlternateValue = {
   pickLongestSize,
@@ -197,6 +201,7 @@ const pickAlternateValue = {
   getArrInArr,
   decArrayIndex,
   combineListOfList,
+  orderListCombinationByRankDesc,
 };
 
 module.exports = pickAlternateValue;

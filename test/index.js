@@ -122,3 +122,24 @@ test('combine a list of list', (t) => {
   t.equal(actual.length, 2 * 3 * 4, 'size');
   t.deepEqual(actual, expected.reverse(), 'Table');
 });
+
+test('order list combination by rank', (t) => {
+  let i;
+  let j;
+  let k;
+  t.plan(3);
+  const combi = [];
+
+  for (i of a2135) {
+    for (j of a123) {
+      for (k of a31) {
+        combi.push([k, j, i]);
+      }
+    }
+  }
+  const rankFn = (list => pav.sumSize(list));
+  const actual = pav.orderListCombinationByRankDesc(combi, rankFn);
+  t.equal(actual.length, 2 * 3 * 4, 'size');
+  t.deepEqual(actual[0], ['aaa', 'bbb', 'ccccc'], 'maximum');
+  t.deepEqual(actual[23], ['a', 'b', 'c'], 'minimum');
+});
