@@ -1,10 +1,13 @@
 import _ from 'lodash';
 
 /**
- * Pick the the object with the longest size
+ * Pick the first string (or object) with the longest size
  * @param {array} list - list of strings or objects
  * @param {object} defaultValue - the object/string to return if null
  * @param {integer} max - the maximum size that is allowed
+ * @example
+ * // returns abcd
+ * pav.pickLongestSize(['ab', 'a', 'abcd'])
  * @return {object} The object or string that is the longest
  */
 const pickLongestSize = (list,
@@ -19,10 +22,13 @@ const pickLongestSize = (list,
 };
 
 /**
- * Pick the the object with the shortest size
+ * Pick the first string (or object) with the shortest size
  * @param {array} list - list of strings or objects
  * @param {object} defaultValue - the object/string to return if null
  * @param {integer} min - the minimum size that is allowed
+ * @example
+ * // returns a1
+ * pav.pickShortestSize(['abd', 'a1', 'a2', 'abc'])
  * @return {object} The object or string that is the longest
  */
 const pickShortestSize = (list,
@@ -40,7 +46,10 @@ const pickShortestSize = (list,
 /**
  * Adds the size of all the items in the list
  * @param {array} list - list of strings or objects
-  * @return {integer} The sum of all the sizes
+ * @example
+ * // returns 7
+ * pav.sumSize(['ab', 'a', 'abcd'])
+ * @return {integer} The sum of all the sizes
  */
 const sumSize = list =>
    _.sumBy(list, s => _.size(s))
@@ -49,7 +58,10 @@ const sumSize = list =>
 /**
  * Finds the minimum size of all the items in the list
  * @param {array} list - list of strings or objects
-  * @return {integer} The minimum of all the sizes
+ * @example
+ * // returns 1
+ * pav.minSize(['ab', 'a', 'abcd'])
+ * @return {integer} The minimum of all the sizes
  */
 const minSize = (list) => {
   const noNullList = _.filter(list, s => !_.isNil(s));
@@ -61,7 +73,10 @@ const minSize = (list) => {
 /**
  * Finds the maximum size of all the items in the list
  * @param {array} list - list of strings or objects
-  * @return {integer} The maximum of all the sizes
+ * @example
+ * // returns 4
+ * pav.maxSize(['ab', 'a', 'abcd'])
+ * @return {integer} The maximum of all the sizes
  */
 const maxSize = (list) => {
   const noNullList = _.filter(list, s => !_.isNil(s));
@@ -71,11 +86,15 @@ const maxSize = (list) => {
 };
 
 /**
- * Discard the placeholders of a string template
+ * Discard the placeholders of a string template. Useful to check
+ * the minimum length of a template.
  * @param {string} template - list of strings or objects
  * @param {string} phStart - the placeholder start keyword
  * @param {string} phEnd - the placeholder end keyword
-  * @return {string} The template without ny placeholders
+ * @example
+ * // returns 123456
+ * pav.discardPlaceholders('1234${placeholder}56','${','}')
+ * @return {string} The template without ny placeholders
  */
 const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
   if (_.isNil(template)) return null;
@@ -91,7 +110,10 @@ const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
  * Gets an array using an array of indexes
  * @param {array} arrIdx - an array of indices
  * @param {array} listOfList - a list of list
-  * @return {array} the selected list
+ * @example
+ * // returns ['b', '1']
+ * pav.getArrInArr([1, 1], [['a','b'], [1, 2]])
+ * @return {array} the selected list
  */
 const getArrInArr = (arrIdx, listOfList) => {
   if (_.isNil(arrIdx) || _.isNil(listOfList)) return null;
@@ -112,10 +134,15 @@ const getArrInArr = (arrIdx, listOfList) => {
 };
 
 /**
- * Decrements an array of indexes
+ * Decrements an array of indexes from left to right.
+ * For right to left, uses .reverse().
+ * This is useful for iterating over indices.
  * @param {array} arrIdx - an array of indices
  * @param {array} maxIdx - an array of the maximum indices
-  * @return {array} the selected list
+ * @example
+ * // returns [1, 2, 4]
+ * pav.decArrayIndex([2, 2, 4], [3, 2, 4])
+ * @return {array} the selected list
  */
 const decArrayIndex = (arrIdx, maxIdx) => {
   const arrIdxl = _.cloneDeep(arrIdx);
@@ -139,7 +166,10 @@ const decArrayIndex = (arrIdx, maxIdx) => {
 /**
  * Combine a list of list in a similar as imbricated for loops
  * @param {array} listOfList - a list of list
- * @return {array} All the possible combinations in reverse order
+ * @example
+ * // returns [['b', 2], ['a', 2], ['b', 1], ['a', 1]]
+ * pav.combineListOfList([['a','b'], [1, 2]])
+* @return {array} All the possible combinations in reverse order
  */
 const combineListOfList = (listOfList) => {
   if (_.isEmpty(listOfList)) return null;
