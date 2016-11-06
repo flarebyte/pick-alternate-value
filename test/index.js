@@ -69,12 +69,12 @@ test('min the size', (t) => {
   t.deepEqual(pav.minSize([{ a, b }, { a, b, c }, { a }]), 1, 'array of obj');
 });
 
-test('minimum length of template', (t) => {
+test('discard placeholders', (t) => {
   t.plan(2);
   const p = '${';
-  t.equal(pav.minLengthOfTemplate(null), null, 'with null');
-  t.equal(pav.minLengthOfTemplate(`12345${p} user }6${p}a.b.c}7`, 7,
-  'templ size'));
+  const given = `12345${p} user }6${p}a.b1.c}7${p}sum(10,15)}`;
+  t.equal(pav.discardPlaceholders(null), null, 'with null');
+  t.equal(pav.discardPlaceholders(given), '1234567', '');
 });
 
 test('get an array inside an array', (t) => {

@@ -42,10 +42,14 @@ const maxSize = (list) => {
   return _.size(_.last(sorted));
 };
 
-const minLengthOfTemplate = (template) => {
+const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
   if (_.isNil(template)) return null;
-  const withoutVars = template.replace(/\$\{\s*[A-Za-z0-9.]+\s*\}/g, '');
-  return _.size(withoutVars);
+  const anyNames = '[A-Za-z0-9(),.]+';
+  const phS = _.escapeRegExp(phStart);
+  const phE = _.escapeRegExp(phEnd);
+  const search = new RegExp(`${phS}\\s*${anyNames}\\s*${phE}`, 'g');
+  const withoutVars = template.replace(search, '');
+  return withoutVars;
 };
 
 const getArrInArr = (arrIdx, listOfList) => {
@@ -80,8 +84,9 @@ const decArrayIndex = (arrIdx, maxIdx) => {
     tailRes.unshift(maxIdxl[0]);
     return tailRes;
   }
-  _.tail(arrIdxl).unshift(headDec);
-  return arrIdxl;
+  const tailIdx = _.tail(arrIdxl);
+  tailIdx.unshift(headDec);
+  return tailIdx;
 };
 
 const calculateAltSizeTable = (listOfList) => {
@@ -109,7 +114,7 @@ const pickAlternateValue = {
   sumSize,
   minSize,
   maxSize,
-  minLengthOfTemplate,
+  discardPlaceholders,
   getArrInArr,
   decArrayIndex,
   calculateAltSizeTable,
