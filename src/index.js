@@ -1,6 +1,12 @@
 import _ from 'lodash';
 
-
+/**
+ * Pick the the object with the longest size
+ * @param {array} list - list of strings or objects
+ * @param {object} defaultValue - the object/string to return if null
+ * @param {integer} max - the maximum size that is allowed
+ * @return {object} The object or string that is the longest
+ */
 const pickLongestSize = (list,
    defaultValue = null,
    max = Number.MAX_SAFE_INTEGER) => {
@@ -12,6 +18,13 @@ const pickLongestSize = (list,
   return _.head(filtered);
 };
 
+/**
+ * Pick the the object with the shortest size
+ * @param {array} list - list of strings or objects
+ * @param {object} defaultValue - the object/string to return if null
+ * @param {integer} min - the minimum size that is allowed
+ * @return {object} The object or string that is the longest
+ */
 const pickShortestSize = (list,
   defaultValue = null,
   min = -1
@@ -24,10 +37,20 @@ const pickShortestSize = (list,
   return _.head(filtered);
 };
 
+/**
+ * Adds the size of all the items in the list
+ * @param {array} list - list of strings or objects
+  * @return {integer} The sum of all the sizes
+ */
 const sumSize = list =>
    _.sumBy(list, s => _.size(s))
 ;
 
+/**
+ * Finds the minimum size of all the items in the list
+ * @param {array} list - list of strings or objects
+  * @return {integer} The minimum of all the sizes
+ */
 const minSize = (list) => {
   const noNullList = _.filter(list, s => !_.isNil(s));
   if (_.isEmpty(noNullList)) return null;
@@ -35,6 +58,11 @@ const minSize = (list) => {
   return _.size(_.head(sorted));
 };
 
+/**
+ * Finds the maximum size of all the items in the list
+ * @param {array} list - list of strings or objects
+  * @return {integer} The maximum of all the sizes
+ */
 const maxSize = (list) => {
   const noNullList = _.filter(list, s => !_.isNil(s));
   if (_.isEmpty(noNullList)) return null;
@@ -42,6 +70,13 @@ const maxSize = (list) => {
   return _.size(_.last(sorted));
 };
 
+/**
+ * Discard the placeholders of a string template
+ * @param {string} template - list of strings or objects
+ * @param {string} phStart - the placeholder start keyword
+ * @param {string} phEnd - the placeholder end keyword
+  * @return {string} The template without ny placeholders
+ */
 const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
   if (_.isNil(template)) return null;
   const anyNames = '[A-Za-z0-9(),.]+';
@@ -52,6 +87,12 @@ const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
   return withoutVars;
 };
 
+/**
+ * Gets an array using an array of indexes
+ * @param {array} arrIdx - an array of indices
+ * @param {array} listOfList - a list of list
+  * @return {array} the selected list
+ */
 const getArrInArr = (arrIdx, listOfList) => {
   if (_.isNil(arrIdx) || _.isNil(listOfList)) return null;
   const sizeIdx = _.size(arrIdx);
@@ -70,6 +111,12 @@ const getArrInArr = (arrIdx, listOfList) => {
   return result;
 };
 
+/**
+ * Decrements an array of indexes
+ * @param {array} arrIdx - an array of indices
+ * @param {array} maxIdx - an array of the maximum indices
+  * @return {array} the selected list
+ */
 const decArrayIndex = (arrIdx, maxIdx) => {
   const arrIdxl = _.cloneDeep(arrIdx);
   const maxIdxl = _.cloneDeep(maxIdx);
@@ -89,6 +136,11 @@ const decArrayIndex = (arrIdx, maxIdx) => {
   return tailIdx;
 };
 
+/**
+ * Combine a list of list in a similar as imbricated for loops
+ * @param {array} listOfList - a list of list
+ * @return {array} All the possible combinations in reverse order
+ */
 const combineListOfList = (listOfList) => {
   if (_.isEmpty(listOfList)) return null;
   const maxIdx = _.map(listOfList, n => _.size(n) - 1);
