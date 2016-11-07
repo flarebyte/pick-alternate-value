@@ -86,6 +86,16 @@ const maxSize = (list) => {
 };
 
 /**
+ * Returns true if the list does not contain any null
+ * @param {array} list - list of strings or objects
+ * @example
+ * // returns false
+ * pav.hasNoNull(['ab', null, 'abcd'])
+ * @return {integer} true if no null
+ */
+const hasNoNull = list => !_.some(list, _.isNil);
+
+/**
  * Discard the placeholders of a string template. Useful to check
  * the minimum length of a template.
  * @param {string} template - list of strings or objects
@@ -169,7 +179,7 @@ const decArrayIndex = (arrIdx, maxIdx) => {
  * @example
  * // returns [['b', 2], ['a', 2], ['b', 1], ['a', 1]]
  * pav.combineListOfList([['a','b'], [1, 2]])
-* @return {array} All the possible combinations in reverse order
+ * @return {array} All the possible combinations in reverse order
  */
 const combineListOfList = (listOfList) => {
   if (_.isEmpty(listOfList)) return null;
@@ -186,8 +196,23 @@ const combineListOfList = (listOfList) => {
   return result;
 };
 
-const orderListCombinationByRankDesc = (listCombination, rankFn) => {
-  return listCombination;
+/**
+ * Finds the combination with the highest rank
+ * @param {array} listCombination - a list of list
+ * @param {function} rankFn - a function which returns the rank. Default by size
+ * @param {function} filterFn - a function which filter only the suitable
+ * combination.
+ * @example
+ * // returns ['bb', 22]
+ * pav.highestRankedCombination([['bb', 2], ['a', 22], ['b', 1], ['a', 1]])
+ * @return {array} The highest ranked combination
+ */
+const highestRankedCombination = (listCombination,
+  rankFn = sumSize, filterFn = hasNoNull) => {
+  const filtered = _.filter(listCombination, filterFn);
+  if (_.isEmpty(filtered)) return null;
+  const sorted = _.sortBy(filtered, rankFn);
+  return _.last(sorted);
 };
 
 
@@ -197,11 +222,12 @@ const pickAlternateValue = {
   sumSize,
   minSize,
   maxSize,
+  hasNoNull,
   discardPlaceholders,
   getArrInArr,
   decArrayIndex,
   combineListOfList,
-  orderListCombinationByRankDesc,
+  highestRankedCombination,
 };
 
 module.exports = pickAlternateValue;

@@ -69,6 +69,12 @@ test('min the size', (t) => {
   t.deepEqual(pav.minSize([{ a, b }, { a, b, c }, { a }]), 1, 'array of obj');
 });
 
+test('has no null', (t) => {
+  t.plan(2);
+  t.equal(pav.hasNoNull([1, 'a', 'aa']), true, 'no null');
+  t.equal(pav.hasNoNull([1, null, 'aa']), false, 'empty');
+});
+
 test('discard placeholders', (t) => {
   t.plan(2);
   const p = '${';
@@ -123,11 +129,11 @@ test('combine a list of list', (t) => {
   t.deepEqual(actual, expected.reverse(), 'Table');
 });
 
-test('order list combination by rank', (t) => {
+test('get highest ranked combination', (t) => {
   let i;
   let j;
   let k;
-  t.plan(3);
+  t.plan(1);
   const combi = [];
 
   for (i of a2135) {
@@ -137,9 +143,45 @@ test('order list combination by rank', (t) => {
       }
     }
   }
-  const rankFn = (list => pav.sumSize(list));
-  const actual = pav.orderListCombinationByRankDesc(combi, rankFn);
-  t.equal(actual.length, 2 * 3 * 4, 'size');
-  t.deepEqual(actual[0], ['aaa', 'bbb', 'ccccc'], 'maximum');
-  t.deepEqual(actual[23], ['a', 'b', 'c'], 'minimum');
+
+  const actual = pav.highestRankedCombination(combi);
+  t.deepEqual(actual, ['aaa', 'bbb', 'ccccc'], 'maximum');
+});
+
+test('get highest ranked combination with null', (t) => {
+  let i;
+  let j;
+  let k;
+  t.plan(1);
+  const combi = [];
+
+  for (i of a2135) {
+    for (j of ['b', 'bb', null]) {
+      for (k of a31) {
+        combi.push([k, j, i]);
+      }
+    }
+  }
+
+  const actual = pav.highestRankedCombination(combi);
+  t.deepEqual(actual, ['aaa', 'bb', 'ccccc'], 'maximum');
+});
+
+test('get lowest ranked combination', (t) => {
+  let i;
+  let j;
+  let k;
+  t.plan(1);
+  const combi = [];
+
+  for (i of a2135) {
+    for (j of ['b', 'bb', null]) {
+      for (k of a31) {
+        combi.push([k, j, i]);
+      }
+    }
+  }
+
+  const actual = pav.highestRankedCombination(combi, l => -1 * pav.sumSize(l));
+  t.deepEqual(actual, ['a', 'b', 'c'], 'minimum');
 });
