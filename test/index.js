@@ -185,3 +185,15 @@ test('get lowest ranked combination', (t) => {
   const actual = pav.highestRankedCombination(combi, l => -1 * pav.sumSize(l));
   t.deepEqual(actual, ['a', 'b', 'c'], 'minimum');
 });
+
+test('coalesce should default to function when the first fail', (t) => {
+  const nullFn = () => null;
+  const valFn = value => value + 3;
+  const valFn2 = value => value + 10;
+  t.plan(5);
+  t.equal(pav.coalesce([nullFn, valFn], 2), 5, 'NV');
+  t.equal(pav.coalesce([valFn, valFn2], 2), 5, 'VV');
+  t.equal(pav.coalesce([nullFn, nullFn, valFn], 2), 5, 'NNV');
+  t.equal(pav.coalesce([nullFn, valFn, valFn2], 2), 5, 'NVV');
+  t.equal(pav.coalesce([nullFn, nullFn], 2), null, 'NN');
+});

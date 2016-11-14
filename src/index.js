@@ -215,6 +215,27 @@ const highestRankedCombination = (listCombination,
   return _.last(sorted);
 };
 
+/**
+ * Run functions sequentially until one succeeds or return null.
+ * @param {array} fns - a list of functions
+ * @param {object} value - a value to be passed to each function
+ * @example
+ * // returns the result of f1('value') otherwise the value of f2('value')
+ * pav.coalesce([f1, f2], 'value')
+ * @return {array} The result of applying the passed function
+ */
+
+const coalesce = (fns, value) => {
+  const len = fns.length;
+  for (let i = 0; i < len; i += 1) {
+    const result = fns[i](value);
+    const isNotNull = !_.isNil(result);
+    if (isNotNull) {
+      return result;
+    }
+  }
+  return null;
+};
 
 const pickAlternateValue = {
   pickLongestSize,
@@ -228,6 +249,7 @@ const pickAlternateValue = {
   decArrayIndex,
   combineListOfList,
   highestRankedCombination,
+  coalesce,
 };
 
 module.exports = pickAlternateValue;
