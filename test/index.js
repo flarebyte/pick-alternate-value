@@ -76,11 +76,25 @@ test('has no null', (t) => {
 });
 
 test('discard placeholders', (t) => {
-  t.plan(2);
+  t.plan(4);
   const p = '${';
-  const given = `12345${p} user }6${p}a.b1.c}7${p}sum(10,15)}`;
   t.equal(pav.discardPlaceholders(null), null, 'with null');
-  t.equal(pav.discardPlaceholders(given), '1234567', '');
+  t.equal(pav.discardPlaceholders(`12345${p} user }6${p}a.b1.c}7${p}sum(10,1)}`),
+   '1234567', 'A');
+  t.equal(pav.discardPlaceholders(`1[${p} user[0] }]2`, '[${', '}]'), '12', 'B');
+  t.equal(pav.discardPlaceholders(`1<a>${p} user }</a>2`,
+     '<a>${', '}</a>'), '12', 'C');
+});
+
+test('extract placeholders', (t) => {
+  t.plan(4);
+  const p = '${';
+  const given = `12345${p} user }6${p}a.b1.c}7${p}a.b[3]}`;
+  t.deepEqual(pav.extractPlaceholders(null), [], 'with null');
+  t.deepEqual(pav.extractPlaceholders(given), ['user', 'a.b1.c', 'a.b[3]'], 'A');
+  t.deepEqual(pav.extractPlaceholders(`1[${p} u1 }]2`, '[${', '}]'), ['u1'], 'B');
+  t.deepEqual(pav.extractPlaceholders(`1<a>${p} user }</a>2<a>${p} name }</a>3`,
+     '<a>${', '}</a>'), ['user', 'name'], 'C');
 });
 
 test('get an array inside an array', (t) => {

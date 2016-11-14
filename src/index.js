@@ -94,6 +94,7 @@ const maxSize = (list) => {
  * @return {integer} true if no null
  */
 const hasNoNull = list => !_.some(list, _.isNil);
+const anyNames = '[A-Za-z0-9.,)(\\[\\]\'-]+';
 
 /**
  * Discard the placeholders of a string template. Useful to check
@@ -108,12 +109,36 @@ const hasNoNull = list => !_.some(list, _.isNil);
  */
 const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
   if (_.isNil(template)) return null;
-  const anyNames = '[A-Za-z0-9(),.]+';
   const phS = _.escapeRegExp(phStart);
   const phE = _.escapeRegExp(phEnd);
   const search = new RegExp(`${phS}\\s*${anyNames}\\s*${phE}`, 'g');
   const withoutVars = template.replace(search, '');
   return withoutVars;
+};
+
+/**
+ * Extract the placeholders of a string template.
+ * @param {string} template - list of strings or objects
+ * @param {string} phStart - the placeholder start keyword
+ * @param {string} phEnd - the placeholder end keyword
+ * @example
+ * // returns placeholder
+ * pav.extractPlaceholders('1234${placeholder}56','${','}')
+ * @return {array} all the placeholders
+ */
+const extractPlaceholders = (template, phStart = '${', phEnd = '}') => {
+  if (_.isNil(template)) return [];
+  const phS = _.escapeRegExp(phStart);
+  const phE = _.escapeRegExp(phEnd);
+  const search = new RegExp(`${phS}\\s*(${anyNames})\\s*${phE}`, 'g');
+  const results = [];
+  let match = search.exec(template);
+  while (match !== null) {
+    results.push(match[1]);
+    match = search.exec(template);
+  }
+
+  return results;
 };
 
 /**
@@ -245,6 +270,7 @@ const pickAlternateValue = {
   maxSize,
   hasNoNull,
   discardPlaceholders,
+  extractPlaceholders,
   getArrInArr,
   decArrayIndex,
   combineListOfList,
