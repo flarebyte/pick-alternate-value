@@ -212,6 +212,39 @@ test('coalesce should default to function when the first fail', (t) => {
   t.equal(pav.coalesce([nullFn, nullFn], 2), null, 'NN');
 });
 
+test('extract values from paths', (t) => {
+  const data = {
+    t1: 't1v',
+    t2: {
+      t2a1: 't2a1v',
+      t2a2: 't2a2v',
+      t2a3: 't2a3v',
+    },
+  };
+  const props = { a: ['t1', 't2.t2a1'], b: ['t2.t2a3'] };
+  const expected = { a: ['t1v', 't2a1v'], b: ['t2a3v'] };
+
+  t.plan(1);
+  t.deepEqual(pav.extractValuesFromPaths(props, data), expected, 'A');
+});
+
+test('void template', (t) => {
+  const ph1 = ['<a>{{', '}}</a>'];
+  const ph2 = ['<b>{{', '}}</b>'];
+  const t1 = '1<a>{{jdsljals}}</a>2';
+  const t2 = '1<a>{{jdsljals}}</a>2<b>{{dsal}}</b>3';
+  t.plan(3);
+  t.equal(pav.voidTemplate([ph1], t1), '12', 'A');
+  t.equal(pav.voidTemplate([ph1, ph2], t2), '123', 'B');
+  t.equal(pav.voidTemplate([ph2, ph1], t2), '123', 'C');
+});
+
+test('get template params', (t) => {
+  const propsData = { a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'], d: 'G' };
+  const expect = { a: 'X', b: 'C', c: 'D', d: 'Y' };
+  t.plan(1);
+  t.deepEqual(pav.getTemplateParams(propsData, ['a', 'd'], ['X', 'Y']), expect, 'A');
+});
 
 test('render the fitest among many', (t) => {
   const p = '${';

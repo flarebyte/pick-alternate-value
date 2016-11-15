@@ -262,23 +262,24 @@ const coalesce = (fns, value) => {
   return null;
 };
 
-const extractValuesFromPaths = (conf, data) => {
+const extractValuesFromPaths = (props, data) => {
   const getValue = path => _.get(data, path);
   const propToValues = p => _.map(p, getValue);
-  const propsData = _.mapValues(conf.props, propToValues);
+  const propsData = _.mapValues(props, propToValues);
   return propsData;
 };
 
-const voidTemplate = (conf, template) => {
+const voidTemplate = (placeholders4clean, template) => {
   let templateZ = template;
-  _.forEach(conf.placeholders.clean, (p) => {
+  _.forEach(placeholders4clean, (p) => {
     templateZ = discardPlaceholders(templateZ, p[0], p[1]);
   });
   return templateZ;
 };
 
 const getTemplateParams = (propsData, placeholders, selected) => {
-  const params = _.mapValues(propsData, _.head);
+  const firstNotNull = list => _.find(list, _.negate(_.isNull));
+  const params = _.mapValues(propsData, firstNotNull);
   const selParams = _.zipObject(placeholders, selected);
   _.defaults(selParams, params);
   return selParams;
@@ -286,11 +287,11 @@ const getTemplateParams = (propsData, placeholders, selected) => {
 
 const renderFitest = (conf, data, selector) => {
   const len = conf.templates.length;
-  const propsData = extractValuesFromPaths(conf, data);
+  const propsData = extractValuesFromPaths(conf.props, data);
 
   for (let i = 0; i < len; i += 1) {
     const template = conf.templates[i];
-    const templateZ = voidTemplate(conf, template);
+    const templateZ = voidTemplate(conf.placeholders.clean, template);
 
     const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
     const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
@@ -320,6 +321,9 @@ const pickAlternateValue = {
   combineListOfList,
   highestRankedCombination,
   coalesce,
+  extractValuesFromPaths,
+  voidTemplate,
+  getTemplateParams,
   renderFitest,
 };
 
