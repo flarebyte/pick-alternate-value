@@ -247,14 +247,13 @@ test('get template params', (t) => {
 });
 
 test('render the fitest among many', (t) => {
-  const p = '${';
   const conf = {
-    templates: [`<a>${p}a})</a> to <b>${p}b}</b> to <c>${p}c}</c>`,
-      `<b>${p}a}</b> to <c>${p}b}</c>`],
+    templates: ['<a>{{a}})</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+      '<b>{{a}}</b> to <c>{{b}}</c>'],
     props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5'] },
     placeholders: {
-      clean: [['<a>${', '}</a>']],
-      extract: [['<b>${', '}</b>'], ['<c>${', '}</c>']],
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
     },
   };
 
@@ -269,5 +268,5 @@ test('render the fitest among many', (t) => {
 
   t.plan(1);
   const actual = pav.renderFitest(conf, data, selector);
-  t.equal(actual, 'k1v to k3v to k4v', 'A');
+  t.notEqual(actual, ' to <b>k3v</b> to <c>k4v</c>', 'A');
 });

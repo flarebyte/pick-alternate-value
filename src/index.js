@@ -1,4 +1,6 @@
 import _ from 'lodash';
+// Use mustache custom template delimiters.
+_.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
 /**
  * Pick the first string (or object) with the longest size
