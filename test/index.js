@@ -211,3 +211,30 @@ test('coalesce should default to function when the first fail', (t) => {
   t.equal(pav.coalesce([nullFn, valFn, valFn2], 2), 5, 'NVV');
   t.equal(pav.coalesce([nullFn, nullFn], 2), null, 'NN');
 });
+
+
+test('render the fitest among many', (t) => {
+  const p = '${';
+  const conf = {
+    templates: [`<a>${p}a})</a> to <b>${p}b}</b> to <c>${p}c}</c>`,
+      `<b>${p}a}</b> to <c>${p}b}</c>`],
+    props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5'] },
+    placeholders: {
+      clean: [['<a>${', '}</a>']],
+      extract: [['<b>${', '}</b>'], ['<c>${', '}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v',
+    k2: 'k2v',
+    k3: 'k3v',
+    k4: 'k4v',
+  };
+
+  const selector = () => ['. to . to .', 'k1v', 'k3v', 'k4v'];
+
+  t.plan(1);
+  const actual = pav.renderFitest(conf, data, selector);
+  t.equal(actual, 'k1v to k3v to k4v', 'A');
+});
