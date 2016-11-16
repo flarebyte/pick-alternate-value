@@ -109,7 +109,7 @@ const anyNames = '[A-Za-z0-9.,)(\\[\\]\'-]+';
  * pav.discardPlaceholders('1234${placeholder}56','${','}')
  * @return {string} The template without ny placeholders
  */
-const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
+const discardPlaceholders = (template, phStart = '{{', phEnd = '}}') => {
   if (_.isNil(template)) return null;
   const phS = _.escapeRegExp(phStart);
   const phE = _.escapeRegExp(phEnd);
@@ -128,7 +128,7 @@ const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
  * pav.extractPlaceholders('1234${placeholder}56','${','}')
  * @return {array} all the placeholders
  */
-const extractPlaceholders = (template, phStart = '${', phEnd = '}') => {
+const extractPlaceholders = (template, phStart = '{{', phEnd = '}}') => {
   if (_.isNil(template)) return [];
   const phS = _.escapeRegExp(phStart);
   const phE = _.escapeRegExp(phEnd);
@@ -264,6 +264,16 @@ const coalesce = (fns, value) => {
   return null;
 };
 
+/**
+ * Uses json paths mapping to transform an object
+ * @param {object} props - describe each property with a list of paths.
+ * @param {object} data - the data to extract the values from
+ * @example
+ * // returns { a: ['3', '4'], b: '1' }
+ * const data = {q: '1', p: {a: '3', b: '4'}}
+ * pav.extractValuesFromPaths({ a: ['p.a', 'p.b'], b: ['q'] }, data)
+ * @return {object} An object with the extracted data
+ */
 const extractValuesFromPaths = (props, data) => {
   const getValue = path => _.get(data, path);
   const propToValues = p => _.map(p, getValue);
@@ -271,6 +281,15 @@ const extractValuesFromPaths = (props, data) => {
   return propsData;
 };
 
+/**
+ * Creates a template without specific placeholders
+ * @param {array} placeholders4clean - a list of placeholders'start and end.
+ * @param {string} template - the template
+ * @example
+ * // returns AABB
+ * pav.voidTemplate([['<a>{{', '}}</a>']], 'AA<a>{{jdsljals}}</a>BB')
+ * @return {object} a template without these placeholders
+ */
 const voidTemplate = (placeholders4clean, template) => {
   let templateZ = template;
   _.forEach(placeholders4clean, (p) => {
@@ -297,12 +316,13 @@ const renderFitest = (conf, data, selector) => {
 
     const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
     const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
+
     const listOfList = _.map(placeholders, p => propsData[p]);
     listOfList.unshift(templateZ);
     const selected = selector(listOfList);
     const isNotNull = !_.isNil(selected);
     if (isNotNull) {
-      const paramsObj = getTemplateParams(propsData, placeholders, selected);
+      const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
       return _.template(template)(paramsObj);
     }
   }// end for

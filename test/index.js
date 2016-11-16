@@ -77,24 +77,22 @@ test('has no null', (t) => {
 
 test('discard placeholders', (t) => {
   t.plan(4);
-  const p = '${';
   t.equal(pav.discardPlaceholders(null), null, 'with null');
-  t.equal(pav.discardPlaceholders(`12345${p} user }6${p}a.b1.c}7${p}sum(10,1)}`),
+  t.equal(pav.discardPlaceholders('12345{{ user }}6{{a.b1.c}}7{{sum(10,1)}}'),
    '1234567', 'A');
-  t.equal(pav.discardPlaceholders(`1[${p} user[0] }]2`, '[${', '}]'), '12', 'B');
-  t.equal(pav.discardPlaceholders(`1<a>${p} user }</a>2`,
-     '<a>${', '}</a>'), '12', 'C');
+  t.equal(pav.discardPlaceholders('1[{{ user[0] }}]2', '[{{', '}}]'), '12', 'B');
+  t.equal(pav.discardPlaceholders('1<a>{{ user }}</a>2',
+     '<a>{{', '}}</a>'), '12', 'C');
 });
 
 test('extract placeholders', (t) => {
   t.plan(4);
-  const p = '${';
-  const given = `12345${p} user }6${p}a.b1.c}7${p}a.b[3]}`;
+  const given = '12345{{user}}6{{a.b1.c}}7{{a.b[3]}}';
   t.deepEqual(pav.extractPlaceholders(null), [], 'with null');
   t.deepEqual(pav.extractPlaceholders(given), ['user', 'a.b1.c', 'a.b[3]'], 'A');
-  t.deepEqual(pav.extractPlaceholders(`1[${p} u1 }]2`, '[${', '}]'), ['u1'], 'B');
-  t.deepEqual(pav.extractPlaceholders(`1<a>${p} user }</a>2<a>${p} name }</a>3`,
-     '<a>${', '}</a>'), ['user', 'name'], 'C');
+  t.deepEqual(pav.extractPlaceholders('1[{{ u1 }}]2', '[{{', '}}]'), ['u1'], 'B');
+  t.deepEqual(pav.extractPlaceholders('1<a>{{ user }}</a>2<a>{{ name }}</a>3',
+     '<a>{{', '}}</a>'), ['user', 'name'], 'C');
 });
 
 test('get an array inside an array', (t) => {
@@ -248,9 +246,9 @@ test('get template params', (t) => {
 
 test('render the fitest among many', (t) => {
   const conf = {
-    templates: ['<a>{{a}})</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+    templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
       '<b>{{a}}</b> to <c>{{b}}</c>'],
-    props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5'] },
+    props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5', 'k1'] },
     placeholders: {
       clean: [['<a>{{', '}}</a>']],
       extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
@@ -264,9 +262,9 @@ test('render the fitest among many', (t) => {
     k4: 'k4v',
   };
 
-  const selector = () => ['. to . to .', 'k1v', 'k3v', 'k4v'];
+  const selector = () => ['. to . to .', 'k3v', 'k4v'];
 
   t.plan(1);
   const actual = pav.renderFitest(conf, data, selector);
-  t.notEqual(actual, ' to <b>k3v</b> to <c>k4v</c>', 'A');
+  t.equal(actual, '<a>k1v</a> to <b>k3v</b> to <c>k4v</c>', 'A');
 });
