@@ -298,6 +298,17 @@ const voidTemplate = (placeholders4clean, template) => {
   return templateZ;
 };
 
+/**
+ * Build template parameters based on given placeholders
+ * @param {object} propsData - default parameters for the template
+ * @param {array} placeholders - a list of placeholder names
+ * @param {array} selected - the values associated with placeholder
+ * @example
+ * // return { a: 'X', b: 'C', c: 'D', d: 'Y' }
+ * pav.getTemplateParams({ a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'],
+ * d: 'G' }, ['a', 'd'], ['X', 'Y'])
+ * @return {object} the merging of relevant parameters with default ones.
+ */
 const getTemplateParams = (propsData, placeholders, selected) => {
   const firstNotNull = list => _.find(list, _.negate(_.isNull));
   const params = _.mapValues(propsData, firstNotNull);
@@ -306,6 +317,34 @@ const getTemplateParams = (propsData, placeholders, selected) => {
   return selParams;
 };
 
+/**
+ * Build template parameters based on given placeholders
+ * @param {object} conf - configuration of the renderer
+ * @param {object} data - the live data
+ * @param {function} selector - a function which return the best selection of
+ * parameters
+ * @example
+ * // return <a>k1v</a> to <b>k3v</b> to <c>k4v</c>
+  const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<b>{{a}}</b> to <c>{{b}}</c>'],
+   props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5', 'k1'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v',
+   k2: 'k2v',
+   k3: 'k3v',
+   k4: 'k4v',
+ };
+
+  * pav.renderFitest(conf, data, selector)
+ * @return {object} the merging of relevant parameters with default ones.
+ */
 const renderFitest = (conf, data, selector) => {
   const len = conf.templates.length;
   const propsData = extractValuesFromPaths(conf.props, data);
