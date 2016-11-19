@@ -8,6 +8,10 @@
 
 > Pick the most suitable value from a list of possible values
 
+This is a flexible library which facilitates the rendering of text based on
+a template and a list of alternate parameters. Alternate parameters can be
+evaluated against a criteria to select the fittest.
+
 ## Install
 
 ```sh
@@ -17,9 +21,29 @@ npm i -D pick-alternate-value
 ## Usage
 
 ```js
-import pickAlternateValue from "pick-alternate-value"
+import pav from "pick-alternate-value"
 
-pickAlternateValue() // true
+const tUpper = value => value.toUpperCase();
+const conf = {
+  templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+    '<b>{{a}}</b> to <c>{{b}}</c>'],
+  props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+  placeholders: {
+    clean: [['<a>{{', '}}</a>']],
+    extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+  },
+};
+
+const data = {
+  k1: 'k1v',
+  k2: 'k2v',
+  k3: 'k3v',
+  k4: 'k4v',
+};
+
+const selector = () => ['. to . to .', 'K3V', 'k4v'];
+pav.renderFittest(conf, data, selector);
+// return <a>k1v</a> to <b>K3V</b> to <c>k4v</c>
 ```
 
 ## Functions
@@ -47,6 +71,9 @@ pickAlternateValue() // true
 <dd><p>Discard the placeholders of a string template. Useful to check
 the minimum length of a template.</p>
 </dd>
+<dt><a href="#extractPlaceholders">extractPlaceholders(template, phStart, phEnd)</a> ⇒ <code>array</code></dt>
+<dd><p>Extract the placeholders of a string template.</p>
+</dd>
 <dt><a href="#getArrInArr">getArrInArr(arrIdx, listOfList)</a> ⇒ <code>array</code></dt>
 <dd><p>Gets an array using an array of indexes</p>
 </dd>
@@ -60,6 +87,22 @@ This is useful for iterating over indices.</p>
 </dd>
 <dt><a href="#highestRankedCombination">highestRankedCombination(listCombination, rankFn, filterFn)</a> ⇒ <code>array</code></dt>
 <dd><p>Finds the combination with the highest rank</p>
+</dd>
+<dt><a href="#coalesce">coalesce(fns, value)</a> ⇒ <code>array</code></dt>
+<dd><p>Run functions sequentially until one succeeds or return null.</p>
+</dd>
+<dt><a href="#extractValuesFromPaths">extractValuesFromPaths(props, data)</a> ⇒ <code>object</code></dt>
+<dd><p>Uses json paths mapping to transform an object</p>
+</dd>
+<dt><a href="#voidTemplate">voidTemplate(placeholders4clean, template)</a> ⇒ <code>object</code></dt>
+<dd><p>Creates a template without specific placeholders</p>
+</dd>
+<dt><a href="#getTemplateParams">getTemplateParams(propsData, placeholders, selected)</a> ⇒ <code>object</code></dt>
+<dd><p>Build template parameters based on given placeholders</p>
+</dd>
+<dt><a href="#renderFittest">renderFittest(conf, data, selector)</a> ⇒ <code>object</code></dt>
+<dd><p>Render text based on a template with selection of the most suited (fit)
+parameters.</p>
 </dd>
 </dl>
 
@@ -189,6 +232,25 @@ the minimum length of a template.
 // returns 123456
 pav.discardPlaceholders('1234${placeholder}56','${','}')
 ```
+<a name="extractPlaceholders"></a>
+
+## extractPlaceholders(template, phStart, phEnd) ⇒ <code>array</code>
+Extract the placeholders of a string template.
+
+**Kind**: global function  
+**Returns**: <code>array</code> - all the placeholders  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| template | <code>string</code> | list of strings or objects |
+| phStart | <code>string</code> | the placeholder start keyword |
+| phEnd | <code>string</code> | the placeholder end keyword |
+
+**Example**  
+```js
+// returns placeholder
+pav.extractPlaceholders('1234${placeholder}56','${','}')
+```
 <a name="getArrInArr"></a>
 
 ## getArrInArr(arrIdx, listOfList) ⇒ <code>array</code>
@@ -262,6 +324,119 @@ Finds the combination with the highest rank
 ```js
 // returns ['bb', 22]
 pav.highestRankedCombination([['bb', 2], ['a', 22], ['b', 1], ['a', 1]])
+```
+<a name="coalesce"></a>
+
+## coalesce(fns, value) ⇒ <code>array</code>
+Run functions sequentially until one succeeds or return null.
+
+**Kind**: global function  
+**Returns**: <code>array</code> - The result of applying the passed function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fns | <code>array</code> | a list of functions |
+| value | <code>object</code> | a value to be passed to each function |
+
+**Example**  
+```js
+// returns the result of f1('value') otherwise the value of f2('value')
+pav.coalesce([f1, f2], 'value')
+```
+<a name="extractValuesFromPaths"></a>
+
+## extractValuesFromPaths(props, data) ⇒ <code>object</code>
+Uses json paths mapping to transform an object
+
+**Kind**: global function  
+**Returns**: <code>object</code> - An object with the extracted data  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| props | <code>object</code> | describe each property with a list of paths. Optionally,  the first element can be a transformer function. |
+| data | <code>object</code> | the data to extract the values from |
+
+**Example**  
+```js
+// returns { a: ['3', '4'], b: '13' }
+const x13 = value => value*13;
+const data = {q: '1', p: {a: '3', b: '4'}}
+pav.extractValuesFromPaths({ a: ['p.a', 'p.b'], b: [x13, 'q'] }, data)
+```
+<a name="voidTemplate"></a>
+
+## voidTemplate(placeholders4clean, template) ⇒ <code>object</code>
+Creates a template without specific placeholders
+
+**Kind**: global function  
+**Returns**: <code>object</code> - a template without these placeholders  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| placeholders4clean | <code>array</code> | a list of placeholders'start and end. |
+| template | <code>string</code> | the template |
+
+**Example**  
+```js
+// returns AABB
+pav.voidTemplate([['<a>{{', '}}</a>']], 'AA<a>{{jdsljals}}</a>BB')
+```
+<a name="getTemplateParams"></a>
+
+## getTemplateParams(propsData, placeholders, selected) ⇒ <code>object</code>
+Build template parameters based on given placeholders
+
+**Kind**: global function  
+**Returns**: <code>object</code> - the merging of relevant parameters with default ones.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| propsData | <code>object</code> | default parameters for the template |
+| placeholders | <code>array</code> | a list of placeholder names |
+| selected | <code>array</code> | the values associated with placeholder |
+
+**Example**  
+```js
+// return { a: 'X', b: 'C', c: 'D', d: 'Y' }
+pav.getTemplateParams({ a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'],
+d: 'G' }, ['a', 'd'], ['X', 'Y'])
+```
+<a name="renderFittest"></a>
+
+## renderFittest(conf, data, selector) ⇒ <code>object</code>
+Render text based on a template with selection of the most suited (fit)
+parameters.
+
+**Kind**: global function  
+**Returns**: <code>object</code> - the merging of relevant parameters with default ones.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conf | <code>object</code> | configuration of the renderer |
+| data | <code>object</code> | the live data |
+| selector | <code>function</code> | a function which return the best selection of parameters |
+
+**Example**  
+```js
+// return <a>k1v</a> to <b>K3V</b> to <c>k4v</c>
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<b>{{a}}</b> to <c>{{b}}</c>'],
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v',
+   k2: 'k2v',
+   k3: 'k3v',
+   k4: 'k4v',
+ };
+pav.renderFitest(conf, data, selector)
 ```
 
 

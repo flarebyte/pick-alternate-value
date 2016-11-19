@@ -219,8 +219,9 @@ test('extract values from paths', (t) => {
       t2a3: 't2a3v',
     },
   };
-  const props = { a: ['t1', 't2.t2a1'], b: ['t2.t2a3'] };
-  const expected = { a: ['t1v', 't2a1v'], b: ['t2a3v'] };
+  const tUpper = value => value.toUpperCase();
+  const props = { a: [tUpper, 't1', 't2.t2a1'], b: ['t2.t2a3'] };
+  const expected = { a: ['T1V', 'T2A1V'], b: ['t2a3v'] };
 
   t.plan(1);
   t.deepEqual(pav.extractValuesFromPaths(props, data), expected, 'A');
@@ -245,10 +246,11 @@ test('get template params', (t) => {
 });
 
 test('render the fitest among many', (t) => {
+  const tUpper = value => value.toUpperCase();
   const conf = {
     templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
       '<b>{{a}}</b> to <c>{{b}}</c>'],
-    props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5', 'k1'] },
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
     placeholders: {
       clean: [['<a>{{', '}}</a>']],
       extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
@@ -262,9 +264,9 @@ test('render the fitest among many', (t) => {
     k4: 'k4v',
   };
 
-  const selector = () => ['. to . to .', 'k3v', 'k4v'];
+  const selector = () => ['. to . to .', 'K3V', 'k4v'];
 
   t.plan(1);
-  const actual = pav.renderFitest(conf, data, selector);
-  t.equal(actual, '<a>k1v</a> to <b>k3v</b> to <c>k4v</c>', 'A');
+  const actual = pav.renderFittest(conf, data, selector);
+  t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
 });

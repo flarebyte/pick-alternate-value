@@ -264,19 +264,28 @@ const coalesce = (fns, value) => {
   return null;
 };
 
+const startWithFunction = list => _.isFunction(_.head(list));
+
 /**
  * Uses json paths mapping to transform an object
- * @param {object} props - describe each property with a list of paths.
+ * @param {object} props - describe each property with a list of paths. Optionally,
+ the first element can be a transformer function.
  * @param {object} data - the data to extract the values from
  * @example
- * // returns { a: ['3', '4'], b: '1' }
+ * // returns { a: ['3', '4'], b: '13' }
+ * const x13 = value => value*13;
  * const data = {q: '1', p: {a: '3', b: '4'}}
- * pav.extractValuesFromPaths({ a: ['p.a', 'p.b'], b: ['q'] }, data)
+ * pav.extractValuesFromPaths({ a: ['p.a', 'p.b'], b: [x13, 'q'] }, data)
  * @return {object} An object with the extracted data
  */
 const extractValuesFromPaths = (props, data) => {
-  const getValue = path => _.get(data, path);
-  const propToValues = p => _.map(p, getValue);
+  const propToValues = (paths) => {
+    const isFn = startWithFunction(paths);
+    const transf = isFn ? paths[0] : _.identity;
+    const getValue = path => transf(_.get(data, path));
+    const v = isFn ? _.map(_.tail(paths), getValue) : _.map(paths, getValue);
+    return v;
+  };
   const propsData = _.mapValues(props, propToValues);
   return propsData;
 };
@@ -318,17 +327,19 @@ const getTemplateParams = (propsData, placeholders, selected) => {
 };
 
 /**
- * Build template parameters based on given placeholders
+ * Render text based on a template with selection of the most suited (fit)
+ * parameters.
  * @param {object} conf - configuration of the renderer
  * @param {object} data - the live data
  * @param {function} selector - a function which return the best selection of
  * parameters
  * @example
- * // return <a>k1v</a> to <b>k3v</b> to <c>k4v</c>
+ * // return <a>k1v</a> to <b>K3V</b> to <c>k4v</c>
+  const tUpper = value => value.toUpperCase();
   const conf = {
    templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
      '<b>{{a}}</b> to <c>{{b}}</c>'],
-   props: { a: ['k1', 'k2'], b: ['k3'], c: ['k4', 'k5', 'k1'] },
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
    placeholders: {
      clean: [['<a>{{', '}}</a>']],
      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
@@ -345,7 +356,7 @@ const getTemplateParams = (propsData, placeholders, selected) => {
   * pav.renderFitest(conf, data, selector)
  * @return {object} the merging of relevant parameters with default ones.
  */
-const renderFitest = (conf, data, selector) => {
+const renderFittest = (conf, data, selector) => {
   const len = conf.templates.length;
   const propsData = extractValuesFromPaths(conf.props, data);
 
@@ -385,7 +396,7 @@ const pickAlternateValue = {
   extractValuesFromPaths,
   voidTemplate,
   getTemplateParams,
-  renderFitest,
+  renderFittest,
 };
 
 module.exports = pickAlternateValue;
