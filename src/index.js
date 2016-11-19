@@ -1,4 +1,6 @@
 import _ from 'lodash';
+// Use mustache custom template delimiters.
+_.templateSettings.interpolate = /{{([\s\S]+?)}}/g;
 
 /**
  * Pick the first string (or object) with the longest size
@@ -94,6 +96,7 @@ const maxSize = (list) => {
  * @return {integer} true if no null
  */
 const hasNoNull = list => !_.some(list, _.isNil);
+const anyNames = '[A-Za-z0-9.,)(\\[\\]\'-]+';
 
 /**
  * Discard the placeholders of a string template. Useful to check
@@ -106,14 +109,38 @@ const hasNoNull = list => !_.some(list, _.isNil);
  * pav.discardPlaceholders('1234${placeholder}56','${','}')
  * @return {string} The template without ny placeholders
  */
-const discardPlaceholders = (template, phStart = '${', phEnd = '}') => {
+const discardPlaceholders = (template, phStart = '{{', phEnd = '}}') => {
   if (_.isNil(template)) return null;
-  const anyNames = '[A-Za-z0-9(),.]+';
   const phS = _.escapeRegExp(phStart);
   const phE = _.escapeRegExp(phEnd);
   const search = new RegExp(`${phS}\\s*${anyNames}\\s*${phE}`, 'g');
   const withoutVars = template.replace(search, '');
   return withoutVars;
+};
+
+/**
+ * Extract the placeholders of a string template.
+ * @param {string} template - list of strings or objects
+ * @param {string} phStart - the placeholder start keyword
+ * @param {string} phEnd - the placeholder end keyword
+ * @example
+ * // returns placeholder
+ * pav.extractPlaceholders('1234${placeholder}56','${','}')
+ * @return {array} all the placeholders
+ */
+const extractPlaceholders = (template, phStart = '{{', phEnd = '}}') => {
+  if (_.isNil(template)) return [];
+  const phS = _.escapeRegExp(phStart);
+  const phE = _.escapeRegExp(phEnd);
+  const search = new RegExp(`${phS}\\s*(${anyNames})\\s*${phE}`, 'g');
+  const results = [];
+  let match = search.exec(template);
+  while (match !== null) {
+    results.push(match[1]);
+    match = search.exec(template);
+  }
+
+  return results;
 };
 
 /**
@@ -134,10 +161,13 @@ const getArrInArr = (arrIdx, listOfList) => {
   }
   const result = [];
   for (let i = 0; i < sizeIdx; i += 1) {
-    const value = listOfList[i][arrIdx[i]];
-    if (_.isUndefined(value)) {
+    const id = arrIdx[i];
+    const list = listOfList[i];
+    const outOfBound = id >= _.size(list);
+    if (outOfBound) {
       return null;
     }
+    const value = list[id];
     result.push(value);
   }
   return result;
@@ -215,6 +245,187 @@ const highestRankedCombination = (listCombination,
   return _.last(sorted);
 };
 
+/**
+ * Run functions sequentially until one succeeds or return null.
+ * @param {array} fns - a list of functions
+ * @param {object} value - a value to be passed to each function
+ * @example
+ * // returns the result of f1('value') otherwise the value of f2('value')
+ * pav.coalesce([f1, f2], 'value')
+ * @return {array} The result of applying the passed function
+ */
+
+const coalesce = (fns, value) => {
+  const len = fns.length;
+  for (let i = 0; i < len; i += 1) {
+    const result = fns[i](value);
+    const isNotNull = !_.isNil(result);
+    if (isNotNull) {
+      return result;
+    }
+  }
+  return null;
+};
+
+const startWithFunction = list => _.isFunction(_.head(list));
+
+/**
+ * Uses json paths mapping to transform an object
+ * @param {object} props - describe each property with a list of paths. Optionally,
+ the first element can be a transformer function.
+ * @param {object} data - the data to extract the values from
+ * @example
+ * // returns { a: ['3', '4'], b: '13' }
+ * const x13 = value => value*13;
+ * const data = {q: '1', p: {a: '3', b: '4'}}
+ * pav.extractValuesFromPaths({ a: ['p.a', 'p.b'], b: [x13, 'q'] }, data)
+ * @return {object} An object with the extracted data
+ */
+const extractValuesFromPaths = (props, data) => {
+  const propToValues = (paths) => {
+    const isFn = startWithFunction(paths);
+    const transf = isFn ? paths[0] : _.identity;
+    const getValue = path => transf(_.get(data, path));
+    const v = isFn ? _.map(_.tail(paths), getValue) : _.map(paths, getValue);
+    return v;
+  };
+  const propsData = _.mapValues(props, propToValues);
+  return propsData;
+};
+
+/**
+ * Creates a template without specific placeholders
+ * @param {array} placeholders4clean - a list of placeholders'start and end.
+ * @param {string} template - the template
+ * @example
+ * // returns AABB
+ * pav.voidTemplate([['<a>{{', '}}</a>']], 'AA<a>{{jdsljals}}</a>BB')
+ * @return {object} a template without these placeholders
+ */
+const voidTemplate = (placeholders4clean, template) => {
+  let templateZ = template;
+  _.forEach(placeholders4clean, (p) => {
+    templateZ = discardPlaceholders(templateZ, p[0], p[1]);
+  });
+  return templateZ;
+};
+
+/**
+ * Build template parameters based on given placeholders
+ * @param {object} propsData - default parameters for the template
+ * @param {array} placeholders - a list of placeholder names
+ * @param {array} selected - the values associated with placeholder
+ * @example
+ * // return { a: 'X', b: 'C', c: 'D', d: 'Y' }
+ * pav.getTemplateParams({ a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'],
+ * d: 'G' }, ['a', 'd'], ['X', 'Y'])
+ * @return {object} the merging of relevant parameters with default ones.
+ */
+const getTemplateParams = (propsData, placeholders, selected) => {
+  const firstNotNull = list => _.find(list, _.negate(_.isNull));
+  const params = _.mapValues(propsData, firstNotNull);
+  const selParams = _.zipObject(placeholders, selected);
+  _.defaults(selParams, params);
+  return selParams;
+};
+
+/**
+ * Render text based on a template with selection of the most suited (fit)
+ * parameters.
+ * @param {object} conf - configuration of the renderer
+ * @param {object} data - the live data
+ * @param {function} selector - a function which return the best selection of
+ * parameters
+ * @example
+ * // return <a>k1v</a> to <b>K3V</b> to <c>k4v</c>
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<b>{{a}}</b> to <c>{{b}}</c>'],
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v',
+   k2: 'k2v',
+   k3: 'k3v',
+   k4: 'k4v',
+ };
+
+  * pav.renderFitest(conf, data, selector)
+ * @return {string} the rendered template
+ */
+const renderFittest = (conf, data, selector) => {
+  const len = conf.templates.length;
+  const propsData = extractValuesFromPaths(conf.props, data);
+
+  for (let i = 0; i < len; i += 1) {
+    const template = conf.templates[i];
+    const templateZ = voidTemplate(conf.placeholders.clean, template);
+
+    const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
+    const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
+
+    const listOfList = _.map(placeholders, p => propsData[p]);
+    listOfList.unshift([templateZ]);
+    const selected = selector(listOfList);
+    const isNotNull = !_.isNil(selected);
+    if (isNotNull) {
+      const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
+      return _.template(template)(paramsObj);
+    }
+  }// end for
+  return null;
+};
+
+/**
+ * Render text based on a template with selection of the longest
+ * parameters.
+ * @param {object} conf - configuration of the renderer
+ * @param {object} data - the live data
+ * @param {integer} max - maximum length of the generated string
+ * @example
+ const tUpper = value => value.toUpperCase();
+ const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<c>{{c}}</c>'],
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v1',
+   k2: 'k1v11',
+   k3: 'k3v',
+   k4: 'k4v',
+   k6: 'k4v66',
+ };
+ pav.renderLongest(conf, data)
+ // return <a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>
+ pav.renderLongest(conf, data, 10)
+ // return <c>k4v</c>
+ * @return {string} the rendered template
+ */
+const renderLongest = (conf, data, max = Number.MAX_SAFE_INTEGER) => {
+  const sel = (list) => {
+    const minTempl = discardPlaceholders(_.head(list));
+    const sum = _.size(minTempl) + sumSize(_.tail(list));
+    return hasNoNull(list) && (sum <= max);
+  };
+  const selector = (values) => {
+    const listCombination = combineListOfList(values);
+    return highestRankedCombination(listCombination, sumSize, sel);
+  };
+
+  return renderFittest(conf, data, selector);
+};
 
 const pickAlternateValue = {
   pickLongestSize,
@@ -224,10 +435,17 @@ const pickAlternateValue = {
   maxSize,
   hasNoNull,
   discardPlaceholders,
+  extractPlaceholders,
   getArrInArr,
   decArrayIndex,
   combineListOfList,
   highestRankedCombination,
+  coalesce,
+  extractValuesFromPaths,
+  voidTemplate,
+  getTemplateParams,
+  renderFittest,
+  renderLongest,
 };
 
 module.exports = pickAlternateValue;
