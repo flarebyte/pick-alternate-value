@@ -26,8 +26,8 @@ import pav from "pick-alternate-value"
 const tUpper = value => value.toUpperCase();
 const conf = {
   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
-    '<b>{{a}}</b> to <c>{{b}}</c>'],
-  props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+    '<c>{{c}}</c>'],
+  props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
   placeholders: {
     clean: [['<a>{{', '}}</a>']],
     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
@@ -35,15 +35,16 @@ const conf = {
 };
 
 const data = {
-  k1: 'k1v',
-  k2: 'k2v',
+  k1: 'k1v1',
+  k2: 'k1v11',
   k3: 'k3v',
   k4: 'k4v',
+  k6: 'k4v66',
 };
-
-const selector = () => ['. to . to .', 'K3V', 'k4v'];
-pav.renderFittest(conf, data, selector);
-// return <a>k1v</a> to <b>K3V</b> to <c>k4v</c>
+pav.renderLongest(conf, data)
+// return <a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>
+pav.renderLongest(conf, data, 10)
+// return <c>k4v</c>
 ```
 
 ## Functions
@@ -100,8 +101,12 @@ This is useful for iterating over indices.</p>
 <dt><a href="#getTemplateParams">getTemplateParams(propsData, placeholders, selected)</a> ⇒ <code>object</code></dt>
 <dd><p>Build template parameters based on given placeholders</p>
 </dd>
-<dt><a href="#renderFittest">renderFittest(conf, data, selector)</a> ⇒ <code>object</code></dt>
+<dt><a href="#renderFittest">renderFittest(conf, data, selector)</a> ⇒ <code>string</code></dt>
 <dd><p>Render text based on a template with selection of the most suited (fit)
+parameters.</p>
+</dd>
+<dt><a href="#renderLongest">renderLongest(conf, data, max)</a> ⇒ <code>string</code></dt>
+<dd><p>Render text based on a template with selection of the longest
 parameters.</p>
 </dd>
 </dl>
@@ -403,12 +408,12 @@ d: 'G' }, ['a', 'd'], ['X', 'Y'])
 ```
 <a name="renderFittest"></a>
 
-## renderFittest(conf, data, selector) ⇒ <code>object</code>
+## renderFittest(conf, data, selector) ⇒ <code>string</code>
 Render text based on a template with selection of the most suited (fit)
 parameters.
 
 **Kind**: global function  
-**Returns**: <code>object</code> - the merging of relevant parameters with default ones.  
+**Returns**: <code>string</code> - the rendered template  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -438,6 +443,47 @@ parameters.
  };
 pav.renderFitest(conf, data, selector)
 ```
+<a name="renderLongest"></a>
+
+## renderLongest(conf, data, max) ⇒ <code>string</code>
+Render text based on a template with selection of the longest
+parameters.
+
+**Kind**: global function  
+**Returns**: <code>string</code> - the rendered template  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conf | <code>object</code> | configuration of the renderer |
+| data | <code>object</code> | the live data |
+| max | <code>integer</code> | maximum length of the generated string |
+
+**Example**  
+```js
+const tUpper = value => value.toUpperCase();
+ const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<c>{{c}}</c>'],
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v1',
+   k2: 'k1v11',
+   k3: 'k3v',
+   k4: 'k4v',
+   k6: 'k4v66',
+ };
+ pav.renderLongest(conf, data)
+ // return <a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>
+ pav.renderLongest(conf, data, 10)
+ // return <c>k4v</c>
+```
+
 
 
 ## License

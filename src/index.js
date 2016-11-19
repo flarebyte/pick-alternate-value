@@ -161,10 +161,13 @@ const getArrInArr = (arrIdx, listOfList) => {
   }
   const result = [];
   for (let i = 0; i < sizeIdx; i += 1) {
-    const value = listOfList[i][arrIdx[i]];
-    if (_.isUndefined(value)) {
+    const id = arrIdx[i];
+    const list = listOfList[i];
+    const outOfBound = id >= _.size(list);
+    if (outOfBound) {
       return null;
     }
+    const value = list[id];
     result.push(value);
   }
   return result;
@@ -354,7 +357,7 @@ const getTemplateParams = (propsData, placeholders, selected) => {
  };
 
   * pav.renderFitest(conf, data, selector)
- * @return {object} the merging of relevant parameters with default ones.
+ * @return {string} the rendered template
  */
 const renderFittest = (conf, data, selector) => {
   const len = conf.templates.length;
@@ -368,7 +371,7 @@ const renderFittest = (conf, data, selector) => {
     const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
 
     const listOfList = _.map(placeholders, p => propsData[p]);
-    listOfList.unshift(templateZ);
+    listOfList.unshift([templateZ]);
     const selected = selector(listOfList);
     const isNotNull = !_.isNil(selected);
     if (isNotNull) {
@@ -377,6 +380,51 @@ const renderFittest = (conf, data, selector) => {
     }
   }// end for
   return null;
+};
+
+/**
+ * Render text based on a template with selection of the longest
+ * parameters.
+ * @param {object} conf - configuration of the renderer
+ * @param {object} data - the live data
+ * @param {integer} max - maximum length of the generated string
+ * @example
+ const tUpper = value => value.toUpperCase();
+ const conf = {
+   templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+     '<c>{{c}}</c>'],
+   props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+   placeholders: {
+     clean: [['<a>{{', '}}</a>']],
+     extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+   },
+ };
+
+ const data = {
+   k1: 'k1v1',
+   k2: 'k1v11',
+   k3: 'k3v',
+   k4: 'k4v',
+   k6: 'k4v66',
+ };
+ pav.renderLongest(conf, data)
+ // return <a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>
+ pav.renderLongest(conf, data, 10)
+ // return <c>k4v</c>
+ * @return {string} the rendered template
+ */
+const renderLongest = (conf, data, max = Number.MAX_SAFE_INTEGER) => {
+  const sel = (list) => {
+    const minTempl = discardPlaceholders(_.head(list));
+    const sum = _.size(minTempl) + sumSize(_.tail(list));
+    return hasNoNull(list) && (sum <= max);
+  };
+  const selector = (values) => {
+    const listCombination = combineListOfList(values);
+    return highestRankedCombination(listCombination, sumSize, sel);
+  };
+
+  return renderFittest(conf, data, selector);
 };
 
 const pickAlternateValue = {
@@ -397,6 +445,7 @@ const pickAlternateValue = {
   voidTemplate,
   getTemplateParams,
   renderFittest,
+  renderLongest,
 };
 
 module.exports = pickAlternateValue;

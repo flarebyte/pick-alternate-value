@@ -8,7 +8,8 @@ const c = 'C';
 const a31 = ['aaa', 'a'];
 const a123 = ['b', 'bb', 'bbb'];
 const a2135 = ['cc', 'c', 'ccc', 'ccccc'];
-
+const a1N3 = ['b', null, 'bbb'];
+const a1U3 = ['b', a.noMethod, 'bbb'];
 
 test('pick the longest size', (t) => {
   t.plan(10);
@@ -96,13 +97,17 @@ test('extract placeholders', (t) => {
 });
 
 test('get an array inside an array', (t) => {
-  t.plan(3);
+  t.plan(5);
   t.deepEqual(pav.getArrInArr([0, 0, 0], [a31, a123, a2135]),
    [a31[0], a123[0], a2135[0]], 'first');
   t.deepEqual(pav.getArrInArr([1, 1, 1], [a31, a123, a2135]),
     [a31[1], a123[1], a2135[1]], 'second');
   t.deepEqual(pav.getArrInArr([5, 7, 8], [a31, a123, a2135]),
      null, 'none');
+  t.deepEqual(pav.getArrInArr([1, 1, 1], [a31, a1N3, a2135]),
+    [a31[1], a1N3[1], a2135[1]], 'with null');
+  t.deepEqual(pav.getArrInArr([1, 1, 1], [a31, a1U3, a2135]),
+      [a31[1], a1U3[1], a2135[1]], 'with undefined');
 });
 
 test('decrement an index of array starting from head', (t) => {
@@ -137,6 +142,44 @@ test('combine a list of list', (t) => {
     }
   }
   const actual = pav.combineListOfList([a31, a123, a2135]);
+  t.equal(actual.length, 2 * 3 * 4, 'size');
+  t.deepEqual(actual, expected.reverse(), 'Table');
+});
+
+test('combine a list of list with null', (t) => {
+  let i;
+  let j;
+  let k;
+  t.plan(2);
+  const expected = [];
+
+  for (i of a2135) {
+    for (j of a1N3) {
+      for (k of a31) {
+        expected.push([k, j, i]);
+      }
+    }
+  }
+  const actual = pav.combineListOfList([a31, a1N3, a2135]);
+  t.equal(actual.length, 2 * 3 * 4, 'size');
+  t.deepEqual(actual, expected.reverse(), 'Table');
+});
+
+test('combine a list of list with undefined', (t) => {
+  let i;
+  let j;
+  let k;
+  t.plan(2);
+  const expected = [];
+
+  for (i of a2135) {
+    for (j of a1U3) {
+      for (k of a31) {
+        expected.push([k, j, i]);
+      }
+    }
+  }
+  const actual = pav.combineListOfList([a31, a1U3, a2135]);
   t.equal(actual.length, 2 * 3 * 4, 'size');
   t.deepEqual(actual, expected.reverse(), 'Table');
 });
@@ -245,7 +288,7 @@ test('get template params', (t) => {
   t.deepEqual(pav.getTemplateParams(propsData, ['a', 'd'], ['X', 'Y']), expect, 'A');
 });
 
-test('render the fitest among many', (t) => {
+test('render the fittest among many', (t) => {
   const tUpper = value => value.toUpperCase();
   const conf = {
     templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
@@ -269,4 +312,32 @@ test('render the fitest among many', (t) => {
   t.plan(1);
   const actual = pav.renderFittest(conf, data, selector);
   t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
+});
+
+test('render the longest string combination among many', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
+      '<c>{{c}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v1',
+    k2: 'k1v11',
+    k3: 'k3v',
+    k4: 'k4v',
+    k6: 'k4v66',
+  };
+
+  const expected1 = '<a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>';
+  const expected2 = '<c>k4v</c>';
+
+  t.plan(2);
+  t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 10), expected2, 'Longest with max');
 });
