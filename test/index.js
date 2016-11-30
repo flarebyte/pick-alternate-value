@@ -77,11 +77,12 @@ test('has no null', (t) => {
 });
 
 test('discard placeholders', (t) => {
-  t.plan(4);
+  t.plan(5);
   t.equal(pav.discardPlaceholders(null), null, 'with null');
   t.equal(pav.discardPlaceholders('12345{{ user }}6{{a.b1.c}}7{{sum(10,1)}}'),
    '1234567', 'A');
   t.equal(pav.discardPlaceholders('1[{{ user[0] }}]2', '[{{', '}}]'), '12', 'B');
+  t.equal(pav.discardPlaceholders('1({{ user[0] }})2', '({{', '}})'), '12', 'B');
   t.equal(pav.discardPlaceholders('1<a>{{ user }}</a>2',
      '<a>{{', '}}</a>'), '12', 'C');
 });
@@ -281,6 +282,17 @@ test('void template', (t) => {
   t.equal(pav.voidTemplate([ph2, ph1], t2), '123', 'C');
 });
 
+test('void template markdown style', (t) => {
+  const ph1 = ['[{{', '}}]'];
+  const ph2 = ['({{', '}})'];
+  const t1 = '1[{{jdsljals}}]2';
+  const t2 = '1[{{jdsljals}}]2({{dsal}})3';
+  t.plan(3);
+  t.equal(pav.voidTemplate([ph1], t1), '12', 'A');
+  t.equal(pav.voidTemplate([ph1, ph2], t2), '123', 'B');
+  t.equal(pav.voidTemplate([ph2, ph1], t2), '123', 'C');
+});
+
 test('get template params', (t) => {
   const propsData = { a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'], d: 'G' };
   const expect = { a: 'X', b: 'C', c: 'D', d: 'Y' };
@@ -405,9 +417,39 @@ test('render the longest string combination among many', (t) => {
   const expected1 = '<a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>';
   const expected2 = '<c>k4v</c>';
 
-  t.plan(2);
+  t.plan(3);
   t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 31), expected1, 'Longest within length');
   t.equal(pav.renderLongest(conf, data, 10), expected2, 'Longest with max');
+});
+
+test('render the longest string combination markdown style', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: ['({{a}}) to [{{b}}] to [{{c}}]',
+      '[{{c}}]'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+    placeholders: {
+      clean: [['({{', '}})']],
+      extract: [['[{{', '}}]']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v1',
+    k2: 'k1v11',
+    k3: 'k3v',
+    k4: 'k4v',
+    k6: 'k4v66',
+  };
+
+  const expected1 = '(k1v1) to [K3V] to [k4v66]';
+  const expected2 = '[k4v]';
+
+  t.plan(3);
+  t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 20), expected1, 'Longest within length');
+  t.equal(pav.renderLongest(conf, data, 5), expected2, 'Longest with max');
 });
 
 
