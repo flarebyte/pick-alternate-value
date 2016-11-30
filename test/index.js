@@ -288,12 +288,80 @@ test('get template params', (t) => {
   t.deepEqual(pav.getTemplateParams(propsData, ['a', 'd'], ['X', 'Y']), expect, 'A');
 });
 
+test('is template applicable', (t) => {
+  const propsData = { a: ['A', null], b: ['C'], c: [null, 'D', 'E'], d: [null, null] };
+  const f1 = () => true;
+  t.plan(6);
+  t.ok(pav.isTemplateApplicable('template', propsData), 'S');
+  t.ok(pav.isTemplateApplicable({ every: ['a'] }, propsData), 'A');
+  t.ok(pav.isTemplateApplicable({ every: ['a', 'b', 'c'] }, propsData), 'ABC');
+  t.notOk(pav.isTemplateApplicable({ every: ['d'] }, propsData), 'D');
+  t.notOk(pav.isTemplateApplicable({ every: ['d', 'a'] }, propsData), 'DA');
+  t.ok(pav.isTemplateApplicable({ every: [f1, 'd', 'a'] }, propsData), 'f1');
+});
+
 test('render the fittest among many', (t) => {
   const tUpper = value => value.toUpperCase();
   const conf = {
     templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
       '<b>{{a}}</b> to <c>{{b}}</c>'],
     props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v',
+    k2: 'k2v',
+    k3: 'k3v',
+    k4: 'k4v',
+  };
+
+  const selector = () => ['. to . to .', 'K3V', 'k4v'];
+
+  t.plan(1);
+  const actual = pav.renderFittest(conf, data, selector);
+  t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
+});
+
+test('render the fittest with advanced template', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['a', 'b', 'c'],
+      t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<b>{{a}}</b> to <c>{{b}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v',
+    k2: 'k2v',
+    k3: 'k3v',
+    k4: 'k4v',
+  };
+
+  const selector = () => ['. to . to .', 'K3V', 'k4v'];
+
+  t.plan(1);
+  const actual = pav.renderFittest(conf, data, selector);
+  t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
+});
+
+test('render the fittest with advanced template and exclusion', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['d'],
+      t: '<a>{{a}}</a> x <b>{{b}}</b> x <c>{{c}}</c>' },
+      { every: ['a', 'b'],
+        t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<b>{{a}}</b> to <c>{{b}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'], d: ['k9'] },
     placeholders: {
       clean: [['<a>{{', '}}</a>']],
       extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
