@@ -311,6 +311,29 @@ const voidTemplate = (placeholders4clean, template) => {
 };
 
 /**
+ * Returns true if the list contains at least one string.
+ * @param {array} list - list of strings
+ * @example
+ * // returns true
+ * pav.hasSomeString(['ab', null, 'abcd'])
+ * @return {integer} true if some string
+ */
+const hasSomeString = list => _.some(list, _.isString);
+
+
+const isTemplateApplicable = (template, props) => {
+  if (_.isString(template)) {
+    return true;
+  }
+  const every = template.every;
+  if (_.isFunction(every[0])) {
+    return _.head(every)(_.tail(every));
+  }
+  const all = _.map(every, k => hasSomeString(props[k]));
+  return _.every(all, Boolean);
+};
+
+/**
  * Build template parameters based on given placeholders
  * @param {object} propsData - default parameters for the template
  * @param {array} placeholders - a list of placeholder names
@@ -364,20 +387,23 @@ const renderFittest = (conf, data, selector) => {
   const propsData = extractValuesFromPaths(conf.props, data);
 
   for (let i = 0; i < len; i += 1) {
-    const template = conf.templates[i];
-    const templateZ = voidTemplate(conf.placeholders.clean, template);
+    const templ = conf.templates[i];
+    const isApplicable = isTemplateApplicable(templ, propsData);
+    if (isApplicable) {
+      const template = _.isString(templ) ? templ : templ.t;
+      const templateZ = voidTemplate(conf.placeholders.clean, template);
+      const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
+      const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
 
-    const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
-    const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
-
-    const listOfList = _.map(placeholders, p => propsData[p]);
-    listOfList.unshift([templateZ]);
-    const selected = selector(listOfList);
-    const isNotNull = !_.isNil(selected);
-    if (isNotNull) {
-      const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
-      return _.template(template)(paramsObj);
-    }
+      const listOfList = _.map(placeholders, p => propsData[p]);
+      listOfList.unshift([templateZ]);
+      const selected = selector(listOfList);
+      const isNotNull = !_.isNil(selected);
+      if (isNotNull) {
+        const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
+        return _.template(template)(paramsObj);
+      }
+    } // end applicable
   }// end for
   return null;
 };
@@ -443,6 +469,7 @@ const pickAlternateValue = {
   coalesce,
   extractValuesFromPaths,
   voidTemplate,
+  isTemplateApplicable,
   getTemplateParams,
   renderFittest,
   renderLongest,

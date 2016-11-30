@@ -77,11 +77,12 @@ test('has no null', (t) => {
 });
 
 test('discard placeholders', (t) => {
-  t.plan(4);
+  t.plan(5);
   t.equal(pav.discardPlaceholders(null), null, 'with null');
   t.equal(pav.discardPlaceholders('12345{{ user }}6{{a.b1.c}}7{{sum(10,1)}}'),
    '1234567', 'A');
   t.equal(pav.discardPlaceholders('1[{{ user[0] }}]2', '[{{', '}}]'), '12', 'B');
+  t.equal(pav.discardPlaceholders('1({{ user[0] }})2', '({{', '}})'), '12', 'B');
   t.equal(pav.discardPlaceholders('1<a>{{ user }}</a>2',
      '<a>{{', '}}</a>'), '12', 'C');
 });
@@ -281,11 +282,34 @@ test('void template', (t) => {
   t.equal(pav.voidTemplate([ph2, ph1], t2), '123', 'C');
 });
 
+test('void template markdown style', (t) => {
+  const ph1 = ['[{{', '}}]'];
+  const ph2 = ['({{', '}})'];
+  const t1 = '1[{{jdsljals}}]2';
+  const t2 = '1[{{jdsljals}}]2({{dsal}})3';
+  t.plan(3);
+  t.equal(pav.voidTemplate([ph1], t1), '12', 'A');
+  t.equal(pav.voidTemplate([ph1, ph2], t2), '123', 'B');
+  t.equal(pav.voidTemplate([ph2, ph1], t2), '123', 'C');
+});
+
 test('get template params', (t) => {
   const propsData = { a: ['A', 'B'], b: ['C'], c: [null, 'D', 'E'], d: 'G' };
   const expect = { a: 'X', b: 'C', c: 'D', d: 'Y' };
   t.plan(1);
   t.deepEqual(pav.getTemplateParams(propsData, ['a', 'd'], ['X', 'Y']), expect, 'A');
+});
+
+test('is template applicable', (t) => {
+  const propsData = { a: ['A', null], b: ['C'], c: [null, 'D', 'E'], d: [null, null] };
+  const f1 = () => true;
+  t.plan(6);
+  t.ok(pav.isTemplateApplicable('template', propsData), 'S');
+  t.ok(pav.isTemplateApplicable({ every: ['a'] }, propsData), 'A');
+  t.ok(pav.isTemplateApplicable({ every: ['a', 'b', 'c'] }, propsData), 'ABC');
+  t.notOk(pav.isTemplateApplicable({ every: ['d'] }, propsData), 'D');
+  t.notOk(pav.isTemplateApplicable({ every: ['d', 'a'] }, propsData), 'DA');
+  t.ok(pav.isTemplateApplicable({ every: [f1, 'd', 'a'] }, propsData), 'f1');
 });
 
 test('render the fittest among many', (t) => {
@@ -314,12 +338,130 @@ test('render the fittest among many', (t) => {
   t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
 });
 
+test('render the fittest with advanced template', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['a', 'b', 'c'],
+      t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<b>{{a}}</b> to <c>{{b}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v',
+    k2: 'k2v',
+    k3: 'k3v',
+    k4: 'k4v',
+  };
+
+  const selector = () => ['. to . to .', 'K3V', 'k4v'];
+
+  t.plan(1);
+  const actual = pav.renderFittest(conf, data, selector);
+  t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
+});
+
+test('render the fittest with advanced template and exclusion', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['d'],
+      t: '<a>{{a}}</a> x <b>{{b}}</b> x <c>{{c}}</c>' },
+      { every: ['a', 'b'],
+        t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<b>{{a}}</b> to <c>{{b}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k1'], d: ['k9'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v',
+    k2: 'k2v',
+    k3: 'k3v',
+    k4: 'k4v',
+  };
+
+  const selector = () => ['. to . to .', 'K3V', 'k4v'];
+
+  t.plan(1);
+  const actual = pav.renderFittest(conf, data, selector);
+  t.equal(actual, '<a>k1v</a> to <b>K3V</b> to <c>k4v</c>', 'A');
+});
+
 test('render the longest string combination among many', (t) => {
   const tUpper = value => value.toUpperCase();
   const conf = {
     templates: ['<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>',
       '<c>{{c}}</c>'],
     props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v1',
+    k2: 'k1v11',
+    k3: 'k3v',
+    k4: 'k4v',
+    k6: 'k4v66',
+  };
+
+  const expected1 = '<a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>';
+  const expected2 = '<c>k4v</c>';
+
+  t.plan(3);
+  t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 31), expected1, 'Longest within length');
+  t.equal(pav.renderLongest(conf, data, 10), expected2, 'Longest with max');
+});
+
+test('render the longest string combination markdown style', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: ['({{a}}) to [{{b}}] to [{{c}}]',
+      '[{{c}}]'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'] },
+    placeholders: {
+      clean: [['({{', '}})']],
+      extract: [['[{{', '}}]']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v1',
+    k2: 'k1v11',
+    k3: 'k3v',
+    k4: 'k4v',
+    k6: 'k4v66',
+  };
+
+  const expected1 = '(k1v1) to [K3V] to [k4v66]';
+  const expected2 = '[k4v]';
+
+  t.plan(3);
+  t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 20), expected1, 'Longest within length');
+  t.equal(pav.renderLongest(conf, data, 5), expected2, 'Longest with max');
+});
+
+
+test('render the longest string combination with exclusion', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['d'],
+      t: '<a>{{a}}</a> x <b>{{b}}</b> x <c>{{c}}</c>' },
+      { every: ['a', 'b'],
+        t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<c>{{c}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'], d: ['k9'] },
     placeholders: {
       clean: [['<a>{{', '}}</a>']],
       extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
