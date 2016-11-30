@@ -409,3 +409,35 @@ test('render the longest string combination among many', (t) => {
   t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
   t.equal(pav.renderLongest(conf, data, 10), expected2, 'Longest with max');
 });
+
+
+test('render the longest string combination with exclusion', (t) => {
+  const tUpper = value => value.toUpperCase();
+  const conf = {
+    templates: [{ every: ['d'],
+      t: '<a>{{a}}</a> x <b>{{b}}</b> x <c>{{c}}</c>' },
+      { every: ['a', 'b'],
+        t: '<a>{{a}}</a> to <b>{{b}}</b> to <c>{{c}}</c>' },
+      '<c>{{c}}</c>'],
+    props: { a: ['k1', 'k2'], b: [tUpper, 'k3'], c: ['k4', 'k5', 'k6'], d: ['k9'] },
+    placeholders: {
+      clean: [['<a>{{', '}}</a>']],
+      extract: [['<b>{{', '}}</b>'], ['<c>{{', '}}</c>']],
+    },
+  };
+
+  const data = {
+    k1: 'k1v1',
+    k2: 'k1v11',
+    k3: 'k3v',
+    k4: 'k4v',
+    k6: 'k4v66',
+  };
+
+  const expected1 = '<a>k1v1</a> to <b>K3V</b> to <c>k4v66</c>';
+  const expected2 = '<c>k4v</c>';
+
+  t.plan(2);
+  t.equal(pav.renderLongest(conf, data), expected1, 'Longest');
+  t.equal(pav.renderLongest(conf, data, 10), expected2, 'Longest with max');
+});

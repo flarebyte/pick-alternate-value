@@ -388,20 +388,22 @@ const renderFittest = (conf, data, selector) => {
 
   for (let i = 0; i < len; i += 1) {
     const templ = conf.templates[i];
-    const template = _.isString(templ) ? templ : templ.t;
-    const templateZ = voidTemplate(conf.placeholders.clean, template);
-    console.log(propsData);
-    const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
-    const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
+    const isApplicable = isTemplateApplicable(templ, propsData);
+    if (isApplicable) {
+      const template = _.isString(templ) ? templ : templ.t;
+      const templateZ = voidTemplate(conf.placeholders.clean, template);
+      const extractPhld = p => extractPlaceholders(template, p[0], p[1]);
+      const placeholders = _.flatMap(conf.placeholders.extract, extractPhld);
 
-    const listOfList = _.map(placeholders, p => propsData[p]);
-    listOfList.unshift([templateZ]);
-    const selected = selector(listOfList);
-    const isNotNull = !_.isNil(selected);
-    if (isNotNull) {
-      const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
-      return _.template(template)(paramsObj);
-    }
+      const listOfList = _.map(placeholders, p => propsData[p]);
+      listOfList.unshift([templateZ]);
+      const selected = selector(listOfList);
+      const isNotNull = !_.isNil(selected);
+      if (isNotNull) {
+        const paramsObj = getTemplateParams(propsData, placeholders, _.tail(selected));
+        return _.template(template)(paramsObj);
+      }
+    } // end applicable
   }// end for
   return null;
 };
